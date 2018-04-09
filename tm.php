@@ -1,15 +1,15 @@
 <?php
-require 'madeline.phar';
+
+require_once 'vendor/autoload.php';
 include 'dblib.inc.php';
 include 'MadelineEventHandler.php';
 include 'ccxt.php';
-
 date_default_timezone_set ('UTC');
 
 $api_id = 232561;
 $api_hash = 'b17c837bbd88c075ce927a6e112d768b';
 $settings = ['app_info' => ['api_id' => $api_id, 'api_hash' => $api_hash]];
-/*
+
 try {
     $MadelineProto = new \danog\MadelineProto\API('bot.madeline', $settings);
 } catch (\danog\MadelineProto\Exception $e) {
@@ -20,7 +20,7 @@ try {
 $MadelineProto->start();
 $MadelineProto->setEventHandler('\EventHandler');
 $MadelineProto->loop();
-*/
+/*
 
 
 
@@ -51,3 +51,4 @@ foreach($messages_PeerDialogs["messages"] as $message){
 }
 
 
+*/

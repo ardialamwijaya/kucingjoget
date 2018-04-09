@@ -6,15 +6,15 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
 
-    private $vipSignals = 1242625451;
+    private $V_LA_Signals = 1242625451;
 
-    private $cryptoVIPSignal = 1116205712;
+    //private $cryptoVIPSignal = 1116205712;
 
     private $cryptoVIPPaidSignal = 1268010485;
 
-    private $cryptopiaPump = 1217563156;
+    //private $cryptopiaPump = 1217563156;
 
-    private $hawkEyeBittrexSignal = 1056449684;
+    //private $hawkEyeBittrexSignal = 1056449684;
 
     private $myOwnID = 435474230;
 
@@ -78,9 +78,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function processingMessage($message, $channelId, $signalId){
 
         $this->openDB();
-        if($channelId==$this->getVipSignals() || $channelId==$this->getMyOwnID() ){
-           list($lastInsertID, $arrResult)  = $this->processingVIPSignals($message, $channelId, $signalId);
-        }
+        list($lastInsertID, $arrResult)  = $this->processingSignals($message, $channelId, $signalId);
         $buySignal = $arrResult["firstBuy"];
         $coin = $arrResult["coin"];
 
@@ -92,14 +90,15 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         );
 
         $exchange = new ExchangeService($arrSettings);
-        $buyAmount = $exchange->calculateBuyAmount();
-        $marketBuy = $exchange->market_buy($coin, $buyAmount);
-        $
-        $sellPrice = $marketBuy["price"] * 1.03;
-        $exchange->limit_sell($coin,$buyAmount, $sellPrice);
-
-        $exchange->insertBuytoDB($signalId,$coin,"1",$order["price"], $buyAmount);
-        $exchange->insertPendingSelltoDB($signalId, $coin, "1", $sellPrice, $buyAmount);
+        $BTCAmount = "0.002";
+        $ticker = $exchange->getCurrentPriceInfo($coin);
+        $buyPrice = $ticker["ask"];
+        if($buySignal <=($buySignal * 1.02) ){
+            $buyAmount = floor($BTCAmount / $buyPrice);
+            $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+            $price = $buyPrice * 1.03;
+            $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+        }
 
         $emailMessage = implode("\r\n",$arrResult);
         $emailSubject = "Binusian CryptoBot, Buy ".$coin;
@@ -118,11 +117,10 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $this->db->close();
     }
 
-
-    public function processingVIPSignals($message, $channelId, $signalId){
+    public function processingSignals($message, $channelId, $signalId){
         $debug = 0;
 
-        $arrResult = $this->cleansingMessageVIPSignals($message, $channelId, $signalId);
+        $arrResult = $this->cleansingSignals($message, $channelId, $signalId);
 
         if($debug){
             file_put_contents("tmDEBUG.signal",json_encode($arrResult)."\r\n",FILE_APPEND);
@@ -132,45 +130,85 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         return array($lastInsertID,$arrResult);
     }
 
-    public function cleansingMessageVIPSignals($message, $channelId, $signalId){
-        $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
-
-        $message = preg_replace( '/[^[:print:]]/', ' ',$message);
-
-        $message = trim(str_replace("B NANCE","BINANCE",$message));
-
-        $message = trim(rtrim($message));
-
-        $arrMessage = explode(" ",$message);
-        $buy_index = 0;
-        $sell_index = 0;
+    public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
-        $i = 0;
-        $firstBuy = 0;
-        $firstTarget = 0;
-        foreach($arrMessage as $message) {
-            $i++;
-            if(strpos($message,"#")!==false) {
-                $arrResult["coin"] = $message;
-            }
-            if(strtolower($message)=="buy"){
-                $buy_index = $i;
-            }
-            if(strtolower($message)=="sell"){
-                $sell_index = $i;
-            }
-            if(strtolower($message)=="binance"){
-                $arrResult["exchange"] = $message;
-            }
-            if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
-                $arrResult["firstBuy"] = $message;
-                $firstBuy = 1;
-            }
-            if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
-                $arrResult["firstTarget"] = $message;
-                $firstTarget = 1;
+
+        //handling V_LA signals
+        if($channelId == $this->getV_LA_Signals()){
+            $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
+            $message = preg_replace( '/[^[:print:]]/', ' ',$message);
+            $message = trim(str_replace("B NANCE","BINANCE",$message));
+            $message = preg_replace('/\s+/', ' ',$message);
+            $message = trim(rtrim($message));
+
+            $arrMessage = explode(" ",$message);
+            $buy_index = 0;
+            $sell_index = 0;
+            $arrResult = array();
+            $i = 0;
+            $firstBuy = 0;
+            $firstTarget = 0;
+            foreach($arrMessage as $message) {
+                $i++;
+                if(strpos($message,"#")!==false) {
+                    $arrResult["coin"] = $message;
+                }
+                if(strtolower($message)=="buy"){
+                    $buy_index = $i;
+                }
+                if(strtolower($message)=="sell"){
+                    $sell_index = $i;
+                }
+                if(strtolower($message)=="binance"){
+                    $arrResult["exchange"] = $message;
+                }
+                if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
+                    $arrResult["firstBuy"] = $message;
+                    $firstBuy = 1;
+                }
+                if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
+                    $arrResult["firstTarget"] = $message;
+                    $firstTarget = 1;
+                }
             }
         }
+        elseif($channelId == $this->getCryptoVIPPaidSignal() || $channelId == $this->getMyOwnID()){
+            $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
+            $message = preg_replace( '/[^[:print:]]/', ' ',$message);
+            $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats","BUY");
+            foreach($arrReplaced as $replaced){
+                $message = str_replace($arrReplaced, " ",$message);
+            }
+            $message = preg_replace('/\s+/', ' ',$message);
+            $arrMessage = explode(" ",$message);
+            $i = 0;
+            $firstBuy = 0;
+            $firstTarget = 0;
+            foreach($arrMessage as $message){
+                $i++;
+                if(strpos($message,"#")!==false) {
+                    $arrResult["coin"] = $message;
+                }
+                if(strtolower($message)=="buy"){
+                    $buy_index = $i;
+                }
+                if(strtolower($message)=="sell"){
+                    $sell_index = $i;
+                }
+                if(strtolower($message)=="binance"){
+                    $arrResult["exchange"] = $message;
+                }
+                if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
+                    $arrResult["firstBuy"] = $message;
+                    $firstBuy = 1;
+                }
+                if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
+                    $arrResult["firstTarget"] = $message;
+                    $firstTarget = 1;
+                }
+            }
+        }
+
 
         return $arrResult;
     }
@@ -186,14 +224,14 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         return $this->myOwnID;
     }
 
-    public function getVipSignals()
+    public function getV_LA_Signals()
     {
-        return $this->vipSignals;
+        return $this->V_LA_Signals;
     }
 
-    public function setVipSignals($vipSignals)
+    public function setV_LA_Signals($vLaSignals)
     {
-        $this->vipSignals = $vipSignals;
+        $this->V_LA_Signals = $vLaSignals;
     }
 
     public function getCryptoVIPSignal()
