@@ -49,5 +49,5 @@ $messages_PeerDialogs = $MadelineProto->messages->getPeerDialogs(['peers' => $ar
 foreach($messages_PeerDialogs["messages"] as $message){
     echo "id = ".$message["id"].", message=".$message["message"]."\r";
 }
-*/
+
 
