@@ -79,33 +79,35 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
         $this->openDB();
         list($lastInsertID, $arrResult)  = $this->processingSignals($message, $channelId, $signalId);
-        $buySignal = $arrResult["firstBuy"];
-        $coin = $arrResult["coin"];
+        if($arrResult){
+            $buySignal = $arrResult["firstBuy"];
+            $coin = $arrResult["coin"];
 
-        //later on need to enhance, get all apikey from the users table
-        $arrSettings = array(
-            'exchangeName' => "binance",
-            'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
-            'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
-        );
+            //later on need to enhance, get all apikey from the users table
+            $arrSettings = array(
+                'exchangeName' => "binance",
+                'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
+                'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
+            );
 
-        $exchange = new ExchangeService($arrSettings);
-        $BTCAmount = "0.002";
-        $ticker = $exchange->getCurrentPriceInfo($coin);
-        $buyPrice = $ticker["ask"];
-        if($buySignal <=($buySignal * 1.02) ){
-            $buyAmount = floor($BTCAmount / $buyPrice);
-            $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
-            $price = $buyPrice * 1.03;
-            $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+            $exchange = new ExchangeService($arrSettings);
+            $BTCAmount = "0.002";
+            $ticker = $exchange->getCurrentPriceInfo($coin);
+            $buyPrice = $ticker["ask"];
+            if($buySignal <=($buySignal * 1.02) ){
+                $buyAmount = floor($BTCAmount / $buyPrice);
+                $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                $price = $buyPrice * 1.03;
+                $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+            }
+
+            $emailMessage = implode("\r\n",$arrResult);
+            $emailSubject = "Binusian CryptoBot, Buy ".$coin;
+            $emailRecipient = "wayang@wayangcorp.com";
+            $emailSender = "omkucingjoget@wayangcorp.com";
+            mail($emailRecipient,$emailSubject,$emailMessage);
+            $this->closeDB();
         }
-
-        $emailMessage = implode("\r\n",$arrResult);
-        $emailSubject = "Binusian CryptoBot, Buy ".$coin;
-        $emailRecipient = "wayang@wayangcorp.com";
-        $emailSender = "omkucingjoget@wayangcorp.com";
-        mail($emailRecipient,$emailSubject,$emailMessage);
-        $this->closeDB();
     }
 
     public function openDB(){
@@ -121,12 +123,16 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $debug = 0;
 
         $arrResult = $this->cleansingSignals($message, $channelId, $signalId);
+        $lastInsertID = 0;
 
         if($debug){
             file_put_contents("tmDEBUG.signal",json_encode($arrResult)."\r\n",FILE_APPEND);
         }
-        $exchange = strtoupper($arrResult["exchange"]);
-        $lastInsertID = $this->insertSignal($signalId, $channelId, $exchange, $arrResult);
+        if(isset($arrResult["exchange"])){
+            $exchange = strtoupper($arrResult["exchange"]);
+            $lastInsertID = $this->insertSignal($signalId, $channelId, $exchange, $arrResult);
+
+        }
         return array($lastInsertID,$arrResult);
     }
 
@@ -172,7 +178,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 }
             }
         }
-        elseif($channelId == $this->getCryptoVIPPaidSignal() || $channelId == $this->getMyOwnID()){
+        elseif($channelId == $this->getCryptoVIPPaidSignal()){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats","BUY");
