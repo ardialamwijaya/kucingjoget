@@ -140,7 +140,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             }
             $message = preg_replace('/\s+/', ' ',$message);
 
-            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")===false && strpos(strtolower($message)," buy")===false){
+            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")!==false && strpos(strtolower($message)," buy")!==false){
 
 
                 echo "<pre>"; print_r($message);exit;
