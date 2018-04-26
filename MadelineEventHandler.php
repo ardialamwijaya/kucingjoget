@@ -44,8 +44,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
         $res = $this->jsonDecode($res);
 
-        print_r($res);
-
         if($res["message"]!=""){
             $this->processingMessage($res["message"], $res["channel_id"],$res["id"]);
         }
