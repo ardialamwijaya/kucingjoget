@@ -5,9 +5,6 @@
  * Date: 31/03/2018
  * Time: 07.54
  */
-
-require_once "dblib.inc.php";
-
 class ExchangeService
 {
     private $db;
@@ -41,7 +38,6 @@ class ExchangeService
     }
 
     public function getTicker($coin){
-        if(strpos(strtolower($coin),"/btc")===false) $coin = $coin."/btc";
         return $this->exchange->fetch_ticker(strtoupper($coin));
     }
 
@@ -131,7 +127,7 @@ class ExchangeService
         return $this->exchange->fetch_my_trades($symbol);
     }
 
-    public function fetch_open_orders($symbol){
+    public function fetch_open_orders($symbol=null){
         return $this->exchange->fetch_open_orders($symbol);
     }
 
@@ -165,5 +161,44 @@ class ExchangeService
     public function binusianBuy($coin, $buyAmount, $buyPrice){
         $marketBuyInfo = $this->market_buy($coin,$buyAmount);
         $orderInfo = $this->fetch_order($marketBuyInfo["id"], $coin);
+    }
+
+    public function fetch_markets(){
+        return $this->exchange->fetch_markets();
+    }
+
+    public function checkMarket($coin, $exchange){
+        $exchange = strtolower($exchange);
+
+        switch($exchange){
+            case "binance":
+                $this->checkBinanceMarket($coin, $exchange);
+                break;
+        }
+
+    }
+
+    public function checkBinanceMarket($coin, $exchange){
+        $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin/bnb%'  and e.name like '$exchange'";
+        $this->db->query($checkSql);
+        if($row = $this->db->fetch_assoc()){
+            return $row["symbol"];
+        }else{
+            $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin/btc%'  and e.name like '$exchange'";
+            $this->db->query($checkSql);
+            if($row = $this->db->fetch_assoc()){
+                return $row["symbol"];
+            }else{
+                return null;
+            }
+        }
+    }
+
+    public function getBaseCoinAmountFromUSD($baseCoin = "BTC", $usdAmount){
+        $currentBaseCoinPrice = $this->getTicker($baseCoin."/USDT");
+        $coinAmount = $usdAmount / $currentBaseCoinPrice;
+        $coinAmount = round($coinAmount, 5, PHP_ROUND_HALF_DOWN);
+        return $coinAmount;
+
     }
 }

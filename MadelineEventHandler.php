@@ -1,10 +1,9 @@
 <?php
-
-include "ExchangeService.php";
-
 class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
+
+    private $USDAmount = 20;
 
     private $V_LA_Signals = 1242625451;
 
@@ -44,12 +43,16 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
         if(file_exists("tmDEBUG.signal")) unlink("tmDEBUG.signal");
 
+
+
         if($debug==1)
         {
             file_put_contents("tmDEBUG.signal",$res."\r\n",FILE_APPEND);
         }
 
         $res = $this->jsonDecode($res);
+
+        print_r($res);
 
         if($res["message"]!=""){
             $this->processingMessage($res["message"], $res["channel_id"],$res["id"]);
@@ -77,36 +80,35 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function processingMessage($message, $channelId, $signalId){
 
-        $this->openDB();
+        $startTrx = 0;
+        $arrResult = "";
         list($lastInsertID, $arrResult)  = $this->processingSignals($message, $channelId, $signalId);
         if($arrResult){
-            $buySignal = $arrResult["firstBuy"];
-            $coin = $arrResult["coin"];
 
-            //later on need to enhance, get all apikey from the users table
-            $arrSettings = array(
-                'exchangeName' => "binance",
-                'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
-                'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
-            );
+            if($startTrx==0 && $channelId==$this->getMyOwnID()){
 
-            $exchange = new ExchangeService($arrSettings);
-            $BTCAmount = "0.002";
-            $ticker = $exchange->getCurrentPriceInfo($coin);
-            $buyPrice = $ticker["ask"];
-            if($buySignal <=($buySignal * 1.02) ){
-                $buyAmount = floor($BTCAmount / $buyPrice);
-                $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
-                $price = $buyPrice * 1.03;
-                $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+                //DEBUG PURPOSE ONLY
+                print_r($arrResult);
+            }else{
+                $this->openDB();
+                $exchange = $arrResult["exchange"];
+                switch(strtolower($exchange)){
+                    case "binance":
+                        $arrSettings = array(
+                            'exchangeName' => "binance",
+                            'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
+                            'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
+                        );
+
+                        $this->makeBinanceTrx($arrResult,$arrSettings);
+                }
+
+
+
+                $this->closeDB();
             }
 
-            $emailMessage = implode("\r\n",$arrResult);
-            $emailSubject = "Binusian CryptoBot, Buy ".$coin;
-            $emailRecipient = "wayang@wayangcorp.com";
-            $emailSender = "omkucingjoget@wayangcorp.com";
-            mail($emailRecipient,$emailSubject,$emailMessage);
-            $this->closeDB();
+
         }
     }
 
@@ -139,83 +141,51 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        //handling V_LA signals
-        if($channelId == $this->getV_LA_Signals()){
+        if($channelId == $this->getCryptoVIPPaidSignal()){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
-            $message = trim(str_replace("B NANCE","BINANCE",$message));
-            $message = preg_replace('/\s+/', ' ',$message);
-            $message = trim(rtrim($message));
-
-            $arrMessage = explode(" ",$message);
-            $buy_index = 0;
-            $sell_index = 0;
-            $arrResult = array();
-            $i = 0;
-            $firstBuy = 0;
-            $firstTarget = 0;
-            foreach($arrMessage as $message) {
-                $i++;
-                if(strpos($message,"#")!==false) {
-                    $arrResult["coin"] = $message;
-                }
-                if(strtolower($message)=="buy"){
-                    $buy_index = $i;
-                }
-                if(strtolower($message)=="sell"){
-                    $sell_index = $i;
-                }
-                if(strtolower($message)=="binance"){
-                    $arrResult["exchange"] = $message;
-                }
-                if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
-                    $arrResult["firstBuy"] = $message;
-                    $firstBuy = 1;
-                }
-                if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
-                    $arrResult["firstTarget"] = $message;
-                    $firstTarget = 1;
-                }
-            }
-        }
-        elseif($channelId == $this->getCryptoVIPPaidSignal()){
-            $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
-            $message = preg_replace( '/[^[:print:]]/', ' ',$message);
-            $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats","BUY");
+            $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats");
             foreach($arrReplaced as $replaced){
                 $message = str_replace($arrReplaced, " ",$message);
             }
             $message = preg_replace('/\s+/', ' ',$message);
-            $arrMessage = explode(" ",$message);
-            $i = 0;
-            $firstBuy = 0;
-            $firstTarget = 0;
-            foreach($arrMessage as $message){
-                $i++;
-                if(strpos($message,"#")!==false) {
-                    $arrResult["coin"] = $message;
+
+            echo "<pre>"; print_r($message);exit;
+
+            if(strpos(strtolower($message)," done")===false){
+                $arrMessage = explode(" ",$message);
+                $i = 0;
+                $firstBuy = 0;
+                $firstTarget = 0;
+                $buy_index = 0;
+                $sell_index = 0;
+                foreach($arrMessage as $message){
+                    $i++;
+                    if(strpos($message,"#")!==false) {
+                        $arrResult["coin"] = $message;
+                    }
+                    if(strtolower($message)=="buy" || strpos($message,"#")!==false){
+                        $buy_index = $i;
+                    }
+                    if(strtolower($message)=="sell"){
+                        $sell_index = $i;
+                    }
+                    if(strtolower($message)=="binance"){
+                        $arrResult["exchange"] = $message;
+                    }
+                    if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
+                        $arrResult["firstBuy"] = $message;
+                        $firstBuy = 1;
+                    }
+                    if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
+                        $arrResult["firstTarget"] = $message;
+                        $firstTarget = 1;
+                    }
                 }
-                if(strtolower($message)=="buy"){
-                    $buy_index = $i;
-                }
-                if(strtolower($message)=="sell"){
-                    $sell_index = $i;
-                }
-                if(strtolower($message)=="binance"){
-                    $arrResult["exchange"] = $message;
-                }
-                if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
-                    $arrResult["firstBuy"] = $message;
-                    $firstBuy = 1;
-                }
-                if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
-                    $arrResult["firstTarget"] = $message;
-                    $firstTarget = 1;
-                }
+                if($arrResult["exchange"]=="") $arrResult["exchange"]= "binance";
+                $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
             }
         }
-
-
         return $arrResult;
     }
 
@@ -224,6 +194,37 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $this->db->query($sql);
         return $this->db->last_insert_id();
     }
+
+    public function makeBinanceTrx($arrResult, $arrSettings){
+        $coin = $arrResult["coin"];
+        $buySignal = $arrResult["firstBuy"];
+        $exchange = $arrResult["exchange"];
+        //later on need to enhance, get all apikey from the users table
+
+        $exchange = new ExchangeService($arrSettings);
+        $availableCoin = $exchange->checkMarket($coin,$exchange);
+        if($availableCoin){
+            $coin = $availableCoin;
+            $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->getUSDAmount());
+            //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
+            $ticker = $exchange->getCurrentPriceInfo($coin);
+            $buyPrice = $ticker["ask"];
+            if($buySignal <=($buySignal * 1.02) ){
+                $buyAmount = floor($baseCoinAmount / $buyPrice);
+                //$marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                $price = $buyPrice * 1.03;
+                //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+
+                $emailMessage = implode("\r\n",$arrResult);
+                $emailSubject = "Binusian CryptoBot, Buy ".$coin;
+                $emailRecipient = "wayang@wayangcorp.com";
+                $emailSender = "omkucingjoget@wayangcorp.com";
+                //mail($emailRecipient,$emailSubject,$emailMessage);
+            }
+        }
+
+    }
+
 
     public function getMyOwnID()
     {
@@ -289,4 +290,22 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     {
         $this->db = $db;
     }
+
+    /**
+     * @return int
+     */
+    public function getUSDAmount()
+    {
+        return $this->USDAmount;
+    }
+
+    /**
+     * @param int $USDAmount
+     */
+    public function setUSDAmount($USDAmount)
+    {
+        $this->USDAmount = $USDAmount;
+    }
+
+
 }
