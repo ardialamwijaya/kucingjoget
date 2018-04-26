@@ -2,8 +2,10 @@
 
 require_once 'vendor/autoload.php';
 include 'dblib.inc.php';
+include "ExchangeService.php";
 include 'MadelineEventHandler.php';
 include 'ccxt.php';
+require_once "dblib.inc.php";
 date_default_timezone_set ('UTC');
 
 $api_id = 232561;
@@ -20,11 +22,11 @@ try {
 $MadelineProto->start();
 $MadelineProto->setEventHandler('\EventHandler');
 $MadelineProto->loop();
+
+
+
+
 /*
-
-
-
-
 
 $MadelineProto = new \danog\MadelineProto\API('session.madeline', ['app_info' => ['api_id' => $api_id, 'api_hash' => $api_hash]]);
 $MadelineProto->start();
@@ -50,5 +52,14 @@ foreach($messages_PeerDialogs["messages"] as $message){
     echo "id = ".$message["id"].", message=".$message["message"]."\r";
 }
 
+*/
+/*
+include 'madeline.phar';
 
+$MadelineProto = new \danog\MadelineProto\API('session.madeline');
+$MadelineProto->start();
+
+$messages_Messages = $MadelineProto->channels->getMessages(['channel' => "channel#1268010485", 'id' => [142], ]);
+
+var_dump($messages_Messages);
 */

@@ -46,16 +46,17 @@ class db_mySQL {
       $this->Host = "localhost";
       $this->User = "root";
       $this->Password = "";
-      $this->Port = "3307";
+      $this->Port = "3306";
     $this->connect();
   }
 
   function connect() {
 
     $this->Link_ID = @mysqli_connect($this->Host, $this->User, $this->Password, $this->Database, $this->Port);
-    if (!$this->Link_ID) {
-      $this->halt("connection failed.");
-    }
+      if (!$this->Link_ID) {
+          echo "Host:".$this->Host."\r\nUser:".$this->User."\r\nPassword:".$this->Password."\r\nDB:".$this->Database;exit;
+          $this->halt("connection failed.");
+      }
 
     if (!@mysqli_select_db($this->Link_ID, $this->Database)) {
       $this->halt("cannot use database ".$this->Database);

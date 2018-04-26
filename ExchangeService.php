@@ -101,13 +101,27 @@ class ExchangeService
         return $this->exchange->create_order($coin, "limit","sell",$acceptedAmount, $price);
     }
 
-    public function insertBuytoDB($signalId, $coin,$userId, $price, $amount){
-        $insertBuyToDBSql = "insert into buy_trx(signal_id,coin, user_id, buy_price, user_allocated_balance,settled_date) values ($signalId,'$coin',$userId, $price, $amount, now())";
+    public function market_sell($coin, $amount){
+        return $this->exchange->create_order($coin, "market","sell", $amount);
+    }
+
+    public function countLimitSell(){
+        $limitSellSql = "select count(id) as count_pending from pending_sell_trx where is_pending=1";
+        $this->db->query($limitSellSql);
+        $count = 0;
+        if($row = $this->db->fetch_assoc()){
+            $count = $row["count_pending"];
+        }
+        return $count;
+    }
+
+    public function insertBuytoDB($signalId,$buyOrderId, $coin,$userId, $price, $amount, $exchange){
+        $insertBuyToDBSql = "insert into buy_trx(signal_id,order_id,coin, user_id, buy_price, user_allocated_balance,settled_date, $exchange) values ($signalId,$buyOrderId,'$coin',$userId, $price, $amount, now(),$exchange)";
         $this->db->query($insertBuyToDBSql);
     }
 
-    public function insertPendingSelltoDB($signalId, $coin, $userId, $price, $amount){
-        $insertBuyToDBSql = "insert into pending_sell_trx(signal_id,coin,user_id, target_price, user_allocated_balance, settled_date, is_pending) values ($signalId,'$coin', $userId, $price, $amount, now(),1)";
+    public function insertPendingSelltoDB($signalId,$sellOrderId, $buyOrderId, $coin, $userId, $price, $amount,$exchange){
+        $insertBuyToDBSql = "insert into pending_sell_trx(signal_id,sell_limit_order_id,buy_market_order_id,coin,user_id, target_price, user_allocated_balance, settled_date, is_pending, $exchange) values ($signalId,$sellOrderId, $buyOrderId,'$coin', $userId, $price, $amount, now(),1,$exchange)";
         $this->db->query($insertBuyToDBSql);
     }
 
@@ -139,19 +153,8 @@ class ExchangeService
         return $this->exchange->fetch_balance();
     }
 
-    public function cancel_open_orders($coin = null){
-        $openOrders = $this->exchange->fetch_open_orders($coin);
-        foreach($openOrders as $openOrder){
-            $this->exchange->cancel_order($openOrder["id"],$coin);
-        }
-    }
-
     public function fetch_order($id, $symbol){
         return $this->exchange->fetch_order($id,$symbol);
-    }
-
-    public function fetch_closed_orders($symbol, $since, $limit){
-
     }
 
     public function calculate_fee($symbol, $type, $side, $amount, $price){
@@ -169,13 +172,13 @@ class ExchangeService
 
     public function checkMarket($coin, $exchange){
         $exchange = strtolower($exchange);
-
+        $result = "";
         switch($exchange){
             case "binance":
-                $this->checkBinanceMarket($coin, $exchange);
+                $result = $this->checkBinanceMarket($coin, $exchange);
                 break;
         }
-
+        return $result;
     }
 
     public function checkBinanceMarket($coin, $exchange){

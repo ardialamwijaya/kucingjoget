@@ -3,7 +3,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
 
-    private $USDAmount = 20;
+    private $USDAmount = 5;
 
     private $VIPPaidSignal = 1268010485;
 
@@ -90,7 +90,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
                         );
 
-                        $this->makeBinanceTrx($arrResult,$arrSettings);
+                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
 
 
@@ -120,11 +120,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         if($debug){
             file_put_contents("tmDEBUG.signal",json_encode($arrResult)."\r\n",FILE_APPEND);
         }
-        if(isset($arrResult["exchange"])){
-            $exchange = strtoupper($arrResult["exchange"]);
-            $lastInsertID = $this->insertSignal($signalId, $channelId, $exchange, $arrResult);
-
-        }
         return array($lastInsertID,$arrResult);
     }
 
@@ -141,9 +136,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $message = preg_replace('/\s+/', ' ',$message);
 
             if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")!==false && strpos(strtolower($message)," buy")!==false){
-
-
-                echo "<pre>"; print_r($message);exit;
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -186,7 +178,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         return $this->db->last_insert_id();
     }
 
-    public function makeBinanceTrx($arrResult, $arrSettings){
+    public function makeBinanceTrx($arrResult, $arrSettings, $signalId){
         $coin = $arrResult["coin"];
         $buySignal = $arrResult["firstBuy"];
         $exchange = $arrResult["exchange"];
@@ -196,21 +188,35 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $availableCoin = $exchange->checkMarket($coin,$exchange);
         if($availableCoin){
             $coin = $availableCoin;
-            $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->getUSDAmount());
+            if(strpos(strtolower($availableCoin),"/btc")!==false){
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->getUSDAmount());
+            }else{
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->getUSDAmount());
+            }
+
             //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
             $ticker = $exchange->getCurrentPriceInfo($coin);
             $buyPrice = $ticker["ask"];
             if($buySignal <=($buySignal * 1.02) ){
-                $buyAmount = floor($baseCoinAmount / $buyPrice);
-                //$marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
-                $price = $buyPrice * 1.03;
-                //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+                if($exchange->countLimitSell() < 20){
+                    $buyAmount = floor($baseCoinAmount / $buyPrice);
+                    $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                    $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
+                    $price = $buyPrice * 1.05;
+                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+                    $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
 
-                $emailMessage = implode("\r\n",$arrResult);
-                $emailSubject = "Binusian CryptoBot, Buy ".$coin;
-                $emailRecipient = "wayang@wayangcorp.com";
-                $emailSender = "omkucingjoget@wayangcorp.com";
-                //mail($emailRecipient,$emailSubject,$emailMessage);
+                    $emailMessage = "Coin: ".$coin."\r\n";
+                    $emailMessage .= "Allocated Budget: $".$this->getUSDAmount()."\r\n";
+                    $emailMessage .= "Buy Price: ".$buyPrice."\r\n";
+                    $emailMessage .= "Buy Amount: ".$buyAmount."\r\n";
+                    $emailMessage .= "Sell Price: ".$price."\r\n";
+                    $emailSubject = "Binusian CryptoBot, Buy ".$coin;
+                    $emailRecipient = "wayang@wayangcorp.com";
+                    $emailSender = "omkucingjoget@wayangcorp.com";
+                    $headers = "From: $emailSender\r\n";
+                    mail($emailRecipient,$emailSubject,$emailMessage,$headers);
+                }
             }
         }
 
