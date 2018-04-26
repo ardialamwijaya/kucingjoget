@@ -200,11 +200,11 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             if($buySignal <=($buySignal * 1.02) ){
                 if($exchange->countLimitSell() < 20){
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
-                    $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
-                    $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
+                    //$marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                    //$exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
-                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
-                    $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
+                    //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+                    //$exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
                     $emailMessage .= "Allocated Budget: $".$this->getUSDAmount()."\r\n";
@@ -215,7 +215,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $emailRecipient = "wayang@wayangcorp.com";
                     $emailSender = "omkucingjoget@wayangcorp.com";
                     $headers = "From: $emailSender\r\n";
-                    mail($emailRecipient,$emailSubject,$emailMessage,$headers);
+                    //mail($emailRecipient,$emailSubject,$emailMessage,$headers);
                 }
             }
         }
