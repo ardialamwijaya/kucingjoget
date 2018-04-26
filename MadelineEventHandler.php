@@ -5,15 +5,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     private $USDAmount = 20;
 
-    private $V_LA_Signals = 1242625451;
-
-    //private $cryptoVIPSignal = 1116205712;
-
-    private $cryptoVIPPaidSignal = 1268010485;
-
-    //private $cryptopiaPump = 1217563156;
-
-    //private $hawkEyeBittrexSignal = 1056449684;
+    private $VIPPaidSignal = 1268010485;
 
     private $myOwnID = 435474230;
 
@@ -141,7 +133,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->getCryptoVIPPaidSignal()){
+        if($channelId == $this->VIPPaidSignal){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats");
@@ -150,9 +142,10 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             }
             $message = preg_replace('/\s+/', ' ',$message);
 
-            echo "<pre>"; print_r($message);exit;
+            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")===false && strpos(strtolower($message)," buy")===false){
 
-            if(strpos(strtolower($message)," done")===false){
+
+                echo "<pre>"; print_r($message);exit;
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -223,62 +216,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             }
         }
 
-    }
-
-
-    public function getMyOwnID()
-    {
-        return $this->myOwnID;
-    }
-
-    public function getV_LA_Signals()
-    {
-        return $this->V_LA_Signals;
-    }
-
-    public function setV_LA_Signals($vLaSignals)
-    {
-        $this->V_LA_Signals = $vLaSignals;
-    }
-
-    public function getCryptoVIPSignal()
-    {
-        return $this->cryptoVIPSignal;
-    }
-
-    public function setCryptoVIPSignal($cryptoVIPSignal)
-    {
-        $this->cryptoVIPSignal = $cryptoVIPSignal;
-    }
-
-    public function getCryptoVIPPaidSignal()
-    {
-        return $this->cryptoVIPPaidSignal;
-    }
-
-    public function setCryptoVIPPaidSignal($cryptoVIPPaidSignal)
-    {
-        $this->cryptoVIPPaidSignal = $cryptoVIPPaidSignal;
-    }
-
-    public function getCryptopiaPump()
-    {
-        return $this->cryptopiaPump;
-    }
-
-    public function setCryptopiaPump($cryptopiaPump)
-    {
-        $this->cryptopiaPump = $cryptopiaPump;
-    }
-
-    public function getHawkEyeBittrexSignal()
-    {
-        return $this->hawkEyeBittrexSignal;
-    }
-
-    public function setHawkEyeBittrexSignal($hawkEyeBittrexSignal)
-    {
-        $this->hawkEyeBittrexSignal = $hawkEyeBittrexSignal;
     }
 
     public function getDB()
