@@ -33,19 +33,22 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $res = var_export($update, true);
         }
 
-        if(file_exists("tmDEBUG.signal")) unlink("tmDEBUG.signal");
-
-
-
         if($debug==1)
         {
+            if(file_exists("tmDEBUG.signal")) unlink("tmDEBUG.signal");
             file_put_contents("tmDEBUG.signal",$res."\r\n",FILE_APPEND);
         }
 
         $res = $this->jsonDecode($res);
 
         if($res["message"]!=""){
-            $this->processingMessage($res["message"], $res["channel_id"],$res["id"]);
+            $channelId = $res["channel_id"];
+            $signalId = $res["id"];
+
+            $this->openDB();
+            if(!$this->isExistedSignal($channelId, $signalId)){
+                $this->processingMessage($res["message"], $channelId, $signalId);
+            }
         }
     }
 
@@ -69,18 +72,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     }
 
     public function processingMessage($message, $channelId, $signalId){
-
         $startTrx = 0;
-        $arrResult = "";
-        list($lastInsertID, $arrResult)  = $this->processingSignals($message, $channelId, $signalId);
-        if($arrResult){
-
-            if($startTrx==0 && $channelId==$this->getMyOwnID()){
-
+        $arrResult  = $this->processingSignals($message, $channelId, $signalId);
+        if($arrResult && isset($arrResult["exchange"]) && isset($arrResult["coin"])){
+            if($startTrx==0 && $channelId==$this->myOwnID){
                 //DEBUG PURPOSE ONLY
                 print_r($arrResult);
             }else{
-                $this->openDB();
                 $exchange = $arrResult["exchange"];
                 switch(strtolower($exchange)){
                     case "binance":
@@ -89,16 +87,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
                             'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
                         );
-
                         $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
-
-
-
-                $this->closeDB();
             }
-
-
         }
     }
 
@@ -115,18 +106,17 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $debug = 0;
 
         $arrResult = $this->cleansingSignals($message, $channelId, $signalId);
-        $lastInsertID = 0;
 
         if($debug){
             file_put_contents("tmDEBUG.signal",json_encode($arrResult)."\r\n",FILE_APPEND);
         }
-        return array($lastInsertID,$arrResult);
+        return $arrResult;
     }
 
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->VIPPaidSignal){
+        if($channelId == $this->VIPPaidSignal || $channelId == $this->myOwnID){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats");
@@ -135,13 +125,14 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             }
             $message = preg_replace('/\s+/', ' ',$message);
 
-            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")!==false && strpos(strtolower($message)," buy")!==false){
+            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell:-")!==false && strpos(strtolower($message)," buy @")!==false){
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
                 $firstTarget = 0;
                 $buy_index = 0;
                 $sell_index = 0;
+
                 foreach($arrMessage as $message){
                     $i++;
                     if(strpos($message,"#")!==false) {
@@ -153,9 +144,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     if(strtolower($message)=="sell"){
                         $sell_index = $i;
                     }
-                    if(strtolower($message)=="binance"){
-                        $arrResult["exchange"] = $message;
-                    }
                     if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
                         $arrResult["firstBuy"] = $message;
                         $firstBuy = 1;
@@ -165,17 +153,30 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                         $firstTarget = 1;
                     }
                 }
-                if($arrResult["exchange"]=="") $arrResult["exchange"]= "binance";
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
+                $arrResult["exchange"] = "BINANCE";
+
+                $this->insertSignal($signalId, $channelId, $arrResult);
             }
+
+
         }
         return $arrResult;
     }
 
-    public function insertSignal($signalId, $channelId, $exchange, $arrResult){
-        $sql = "INSERT INTO `signals`(`signal_id`,`channel_id`,`exchange`,`coin`, `signal_buy_value`, `signal_sell_value`,`is_processed`, `is_rejected`, `reason`, `received_date`) VALUES ($signalId,$channelId,'$exchange','".str_replace('#','',$arrResult['coin'])."',".$arrResult['firstBuy'].",".$arrResult['firstTarget'].",0,0,'',now())";
+    public function insertSignal($signalId, $channelId, $arrResult){
+        $sql = "INSERT INTO `signals`(`signal_id`,`channel_id`,`exchange`,`coin`, `signal_buy_value`, `signal_sell_value`,`is_processed`, `is_rejected`, `reason`, `received_date`) VALUES ($signalId,$channelId,'".$arrResult['exchange']."','".str_replace('#','',$arrResult['coin'])."',".$arrResult['firstBuy'].",".$arrResult['firstTarget'].",1,0,'',now())";
         $this->db->query($sql);
         return $this->db->last_insert_id();
+    }
+
+    public function isExistedSignal($signalId, $channelId){
+        $sql = "select * from signals where signal_id=$signalId and channel_id=$channelId";
+        $this->db->query($sql);
+        if($row = $this->db->fetch_assoc()){
+            return true;
+        }
+        return false;
     }
 
     public function makeBinanceTrx($arrResult, $arrSettings, $signalId){
@@ -200,11 +201,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             if($buySignal <=($buySignal * 1.02) ){
                 if($exchange->countLimitSell() < 20){
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
+                    $marketBuyInfo["id"] = 0;
+                    $limitSellInfo["id"] = 0;
                     //$marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
-                    //$exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
+                    $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
                     //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
-                    //$exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
+                    $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
                     $emailMessage .= "Allocated Budget: $".$this->getUSDAmount()."\r\n";
