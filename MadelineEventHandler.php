@@ -46,9 +46,11 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $signalId = $res["id"];
 
             $this->openDB();
-            if(!$this->isExistedSignal($channelId, $signalId)){
+            //if(!$this->isExistedSignal($channelId, $signalId))
+            {
                 $this->processingMessage($res["message"], $channelId, $signalId);
             }
+            $this->closeDB();
         }
     }
 
@@ -125,7 +127,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             }
             $message = preg_replace('/\s+/', ' ',$message);
 
-            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell:-")!==false && strpos(strtolower($message)," buy @")!==false){
+            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")!==false && strpos(strtolower($message)," buy @")!==false){
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -156,7 +158,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
 
-                $this->insertSignal($signalId, $channelId, $arrResult);
+                //$this->insertSignal($signalId, $channelId, $arrResult);
             }
 
 
@@ -165,22 +167,14 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     }
 
     public function insertSignal($signalId, $channelId, $arrResult){
-        echo "11aa";
-        exit;
         $sql = "INSERT INTO `signals`(`signal_id`,`channel_id`,`exchange`,`coin`, `signal_buy_value`, `signal_sell_value`,`is_processed`, `is_rejected`, `reason`, `received_date`) VALUES ($signalId,$channelId,'".$arrResult['exchange']."','".str_replace('#','',$arrResult['coin'])."',".$arrResult['firstBuy'].",".$arrResult['firstTarget'].",1,0,'',now())";
-        echo "aa";
         $this->db->query($sql);
-        echo "bb";
         return $this->db->last_insert_id();
     }
 
     public function isExistedSignal($signalId, $channelId){
-        echo "22aa";
-        exit;
         $sql = "select * from signals where signal_id=$signalId and channel_id=$channelId";
-        echo "cc";
         $this->db->query($sql);
-        echo "dd";
         if($row = $this->db->fetch_assoc()){
             return true;
         }
