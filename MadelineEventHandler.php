@@ -46,8 +46,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $signalId = $res["id"];
 
             $this->openDB();
-            //if(!$this->isExistedSignal($channelId, $signalId))
-            {
+            if(!$this->isExistedSignal($channelId, $signalId)){
                 $this->processingMessage($res["message"], $channelId, $signalId);
             }
             $this->closeDB();
@@ -158,7 +157,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
 
-                //$this->insertSignal($signalId, $channelId, $arrResult);
+                $this->insertSignal($signalId, $channelId, $arrResult);
             }
 
 

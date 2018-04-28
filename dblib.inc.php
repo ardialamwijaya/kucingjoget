@@ -43,8 +43,8 @@ class db_mySQL {
 
   public function init() {
 
-      $serverName = $_SERVER["SERVER_NAME"];
-      if(strpos($serverName,"local")!==false){
+      $location = getcwd();
+      if(strpos($location,"htdocs")!==false){
           $this->Database = "kucingjoget";
           $this->Host = "localhost";
           $this->User = "root";
