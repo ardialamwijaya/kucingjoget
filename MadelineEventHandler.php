@@ -9,6 +9,8 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     private $myOwnID = 435474230;
 
+    private $dudungpretID = 1331154859;
+
     public function __construct($MadelineProto)
     {
         parent::__construct($MadelineProto);
@@ -45,11 +47,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $channelId = $res["channel_id"];
             $signalId = $res["id"];
 
-            $this->openDB();
-            if(!$this->isExistedSignal($channelId, $signalId)){
-                $this->processingMessage($res["message"], $channelId, $signalId);
+            if($channelId == $this->VIPPaidSignal || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
+                $this->openDB();
+                if(!$this->isExistedSignal($channelId, $signalId)){
+                    $this->processingMessage($res["message"], $channelId, $signalId);
+                }
+                $this->closeDB();
             }
-            $this->closeDB();
         }
     }
 
@@ -117,16 +121,12 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->VIPPaidSignal || $channelId == $this->myOwnID){
+        if($channelId == $this->VIPPaidSignal || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
-            $arrReplaced = array("-",":",",","(",")","@","SATs","SATS","SATOSHI","Satoshi","satoshi","sats");
-            foreach($arrReplaced as $replaced){
-                $message = str_replace($arrReplaced, " ",$message);
-            }
             $message = preg_replace('/\s+/', ' ',$message);
 
-            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell")!==false && strpos(strtolower($message)," buy @")!==false){
+            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell:-")!==false && strpos(strtolower($message)," buy @")!==false){
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -142,7 +142,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     if(strtolower($message)=="buy" || strpos($message,"#")!==false){
                         $buy_index = $i;
                     }
-                    if(strtolower($message)=="sell"){
+                    if(strpos(strtolower($message),"sell")!==false){
                         $sell_index = $i;
                     }
                     if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
@@ -150,13 +150,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                         $firstBuy = 1;
                     }
                     if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
-                        $arrResult["firstTarget"] = $message;
+                        $arrResult["firstTarget"] = str_replace(",","",$message);
                         $firstTarget = 1;
                     }
                 }
+
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
-
                 $this->insertSignal($signalId, $channelId, $arrResult);
             }
 
@@ -167,6 +167,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function insertSignal($signalId, $channelId, $arrResult){
         $sql = "INSERT INTO `signals`(`signal_id`,`channel_id`,`exchange`,`coin`, `signal_buy_value`, `signal_sell_value`,`is_processed`, `is_rejected`, `reason`, `received_date`) VALUES ($signalId,$channelId,'".$arrResult['exchange']."','".str_replace('#','',$arrResult['coin'])."',".$arrResult['firstBuy'].",".$arrResult['firstTarget'].",1,0,'',now())";
+
         $this->db->query($sql);
         return $this->db->last_insert_id();
     }
