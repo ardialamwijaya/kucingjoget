@@ -184,11 +184,11 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function makeBinanceTrx($arrResult, $arrSettings, $signalId){
         $coin = $arrResult["coin"];
         $buySignal = $arrResult["firstBuy"];
-        $exchange = $arrResult["exchange"];
+        $exchangeSignal = $arrResult["exchange"];
         //later on need to enhance, get all apikey from the users table
 
         $exchange = new ExchangeService($arrSettings);
-        $availableCoin = $exchange->checkMarket($coin,$exchange);
+        $availableCoin = $exchange->checkMarket($coin,$exchangeSignal);
         if($availableCoin){
             $coin = $availableCoin;
             if(strpos(strtolower($availableCoin),"/btc")!==false){
@@ -205,10 +205,10 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
                     $limitSellInfo["id"] = 0;
-                    //$marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                    $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
                     $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
-                    //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
+                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
                     $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
