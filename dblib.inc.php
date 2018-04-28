@@ -42,11 +42,23 @@ class db_mySQL {
 
 
   public function init() {
-      $this->Database = "kucingjoget";
-      $this->Host = "localhost";
-      $this->User = "root";
-      $this->Password = "";
-      $this->Port = "3306";
+
+      $serverName = $_SERVER["SERVER_NAME"];
+      if(strpos($serverName,"local")!==false){
+          $this->Database = "kucingjoget";
+          $this->Host = "localhost";
+          $this->User = "root";
+          $this->Password = "";
+          $this->Port = "3306";
+      }else{
+          $this->Database = "kucingjoget";
+          $this->Host = "indowollongong.com";
+          $this->User = "ardi";
+          $this->Password = 'Koetjingkampung123$sql';
+          $this->Port = "3306";
+      }
+
+
     $this->connect();
   }
 
