@@ -166,6 +166,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function insertSignal($signalId, $channelId, $arrResult){
         echo "11aa";
+        exit;
         $sql = "INSERT INTO `signals`(`signal_id`,`channel_id`,`exchange`,`coin`, `signal_buy_value`, `signal_sell_value`,`is_processed`, `is_rejected`, `reason`, `received_date`) VALUES ($signalId,$channelId,'".$arrResult['exchange']."','".str_replace('#','',$arrResult['coin'])."',".$arrResult['firstBuy'].",".$arrResult['firstTarget'].",1,0,'',now())";
         echo "aa";
         $this->db->query($sql);
@@ -175,6 +176,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function isExistedSignal($signalId, $channelId){
         echo "22aa";
+        exit;
         $sql = "select * from signals where signal_id=$signalId and channel_id=$channelId";
         echo "cc";
         $this->db->query($sql);
