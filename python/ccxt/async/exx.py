@@ -19,6 +19,7 @@ class exx (Exchange):
             'countries': 'CN',
             'rateLimit': 1000 / 10,
             'has': {
+                'fetchOrder': True,
                 'fetchTickers': True,
                 'fetchOpenOrders': True,
             },
@@ -187,7 +188,7 @@ class exx (Exchange):
             result[symbol] = self.parse_ticker(ticker, market)
         return result
 
-    async def fetch_order_book(self, symbol, params={}):
+    async def fetch_order_book(self, symbol, limit=None, params={}):
         await self.load_markets()
         orderbook = await self.publicGetDepth(self.extend({
             'currency': self.market_id(symbol),
@@ -225,7 +226,7 @@ class exx (Exchange):
 
     async def fetch_balance(self, params={}):
         await self.load_markets()
-        balances = await self.privateGetBalance(params)
+        balances = await self.privateGetGetBalance(params)
         result = {'info': balances}
         balances = balances['funds']
         currencies = list(balances.keys())
@@ -266,6 +267,7 @@ class exx (Exchange):
             'id': self.safe_string(order, 'id'),
             'datetime': self.iso8601(timestamp),
             'timestamp': timestamp,
+            'lastTradeTimestamp': None,
             'status': 'open',
             'symbol': symbol,
             'type': 'limit',
@@ -341,7 +343,7 @@ class exx (Exchange):
                 'accesskey': self.apiKey,
                 'nonce': self.nonce(),
             }, params)))
-            signature = self.hmac(self.encode(body), self.encode(self.secret), hashlib.sha512)
+            signature = self.hmac(self.encode(query), self.encode(self.secret), hashlib.sha512)
             url += '?' + query + '&signature=' + signature
         return {'url': url, 'method': method, 'body': body, 'headers': headers}
 

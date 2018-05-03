@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError } = require ('./base/errors');
+const { ExchangeError, InvalidAddress } = require ('./base/errors');
 
 // ---------------------------------------------------------------------------
 
@@ -233,7 +233,7 @@ module.exports = class gateio extends Exchange {
             'symbol': market['symbol'],
             'type': undefined,
             'side': trade['type'],
-            'price': trade['rate'],
+            'price': parseFloat (trade['rate']),
             'amount': this.safeFloat (trade, 'amount'),
         };
     }
@@ -277,6 +277,8 @@ module.exports = class gateio extends Exchange {
         let address = undefined;
         if ('addr' in response)
             address = this.safeString (response, 'addr');
+        if ((typeof address !== 'undefined') && (address.indexOf ('address') >= 0))
+            throw new InvalidAddress (this.id + ' queryDepositAddress ' + address);
         return {
             'currency': currency,
             'address': address,

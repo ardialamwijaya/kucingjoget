@@ -2,10 +2,12 @@
 
 require_once 'vendor/autoload.php';
 include 'dblib.inc.php';
+include 'myBinance.php';
 include "ExchangeService.php";
 include 'MadelineEventHandler.php';
 include 'ccxt.php';
-require_once "dblib.inc.php";
+
+
 date_default_timezone_set ('UTC');
 
 $api_id = 232561;

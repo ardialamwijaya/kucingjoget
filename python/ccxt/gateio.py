@@ -13,6 +13,7 @@ except NameError:
     basestring = str  # Python 2
 import hashlib
 from ccxt.base.errors import ExchangeError
+from ccxt.base.errors import InvalidAddress
 
 
 class gateio (Exchange):
@@ -228,7 +229,7 @@ class gateio (Exchange):
             'symbol': market['symbol'],
             'type': None,
             'side': trade['type'],
-            'price': trade['rate'],
+            'price': float(trade['rate']),
             'amount': self.safe_float(trade, 'amount'),
         }
 
@@ -268,6 +269,8 @@ class gateio (Exchange):
         address = None
         if 'addr' in response:
             address = self.safe_string(response, 'addr')
+        if (address is not None) and(address.find('address') >= 0):
+            raise InvalidAddress(self.id + ' queryDepositAddress ' + address)
         return {
             'currency': currency,
             'address': address,

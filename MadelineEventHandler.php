@@ -89,8 +89,8 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     case "binance":
                         $arrSettings = array(
                             'exchangeName' => "binance",
-                            'apiKey' => 'zwhEjpIR3XzbQShM5p9jMNmPUOphCTehHEup1G6DlB9wA8wpdmjc7tTsUiHhCtiF',
-                            'secret' => 'UGVyb7Txko0t16DbCKjTxi1sI9fM2LK3oRf4WaRCTo6DIJVYSQySV5KOSVmyxzmU'
+                            'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
+                            'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
                         $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
@@ -219,12 +219,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $emailSubject = "Binusian CryptoBot, Buy ".$coin;
                     $emailRecipient = "wayang@wayangcorp.com";
                     $emailSender = "omkucingjoget@wayangcorp.com";
+
+                    exit($emailMessage);
                     $headers = "From: $emailSender\r\n";
                     //mail($emailRecipient,$emailSubject,$emailMessage,$headers);
                 }
             }
         }
-
     }
 
     public function getDB()

@@ -33,6 +33,8 @@ class ExchangeService
                     "apiKey" => $this->apiKey,
                     "secret" => $this->apiSecret
                 ));
+                $this->exchange->options['adjustForTimeDifference'] = true; // auto-adjust the time difference
+                $this->exchange->options['recvWindow'] = 50000;
                 break;
         }
     }
@@ -92,6 +94,11 @@ class ExchangeService
         return $allocatedBalance;
     }
 
+    public function limit_trx($type,$coin, $amount, $price){
+        return $this->exchange->create_order($coin, "limit",$type,$amount, $price);
+    }
+
+
     public function market_buy($coin, $amount){
         return $this->exchange->create_order($coin, "market","buy", $amount);
     }
@@ -116,12 +123,12 @@ class ExchangeService
     }
 
     public function insertBuytoDB($signalId,$buyOrderId, $coin,$userId, $price, $amount, $exchange){
-        $insertBuyToDBSql = "insert into buy_trx(signal_id,order_id,coin, user_id, buy_price, user_allocated_balance,settled_date, $exchange) values ($signalId,$buyOrderId,'$coin',$userId, $price, $amount, now(),$exchange)";
+        $insertBuyToDBSql = "insert into buy_trx(signal_id,order_id,coin, user_id, buy_price, user_allocated_balance,settled_date, exchange) values ($signalId,$buyOrderId,'$coin',$userId, $price, $amount, now(),'$exchange')";
         $this->db->query($insertBuyToDBSql);
     }
 
     public function insertPendingSelltoDB($signalId,$sellOrderId, $buyOrderId, $coin, $userId, $price, $amount,$exchange){
-        $insertBuyToDBSql = "insert into pending_sell_trx(signal_id,sell_limit_order_id,buy_market_order_id,coin,user_id, target_price, user_allocated_balance, settled_date, is_pending, $exchange) values ($signalId,$sellOrderId, $buyOrderId,'$coin', $userId, $price, $amount, now(),1,$exchange)";
+        $insertBuyToDBSql = "insert into pending_sell_trx(signal_id,sell_limit_order_id,buy_market_order_id,coin,user_id, target_price, user_allocated_balance, settled_date, is_pending, exchange) values ($signalId,$sellOrderId, $buyOrderId,'$coin', $userId, $price, $amount, now(),1,'$exchange')";
         $this->db->query($insertBuyToDBSql);
     }
 
@@ -198,7 +205,8 @@ class ExchangeService
     }
 
     public function getBaseCoinAmountFromUSD($baseCoin = "BTC", $usdAmount){
-        $currentBaseCoinPrice = $this->getTicker($baseCoin."/USDT");
+        $baseCoinTicker = $this->getTicker($baseCoin."/USDT");
+        $currentBaseCoinPrice = $baseCoinTicker["ask"];
         $coinAmount = $usdAmount / $currentBaseCoinPrice;
         $coinAmount = round($coinAmount, 5, PHP_ROUND_HALF_DOWN);
         return $coinAmount;

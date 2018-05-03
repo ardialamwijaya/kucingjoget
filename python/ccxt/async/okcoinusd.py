@@ -162,6 +162,9 @@ class okcoinusd (Exchange):
             'ETC/USD': True,
             'ETH/USD': True,
             'LTC/USD': True,
+            'XRP/USD': True,
+            'EOS/USD': True,
+            'BTG/USD': True,
         }
         for i in range(0, len(markets)):
             id = markets[i]['symbol']
@@ -178,6 +181,7 @@ class okcoinusd (Exchange):
             lot = math.pow(10, -precision['amount'])
             minAmount = markets[i]['minTradeSize']
             minPrice = math.pow(10, -precision['price'])
+            active = (markets[i]['online'] != 0)
             market = self.extend(self.fees['trading'], {
                 'id': id,
                 'symbol': symbol,
@@ -190,7 +194,7 @@ class okcoinusd (Exchange):
                 'spot': True,
                 'future': False,
                 'lot': lot,
-                'active': True,
+                'active': active,
                 'precision': precision,
                 'limits': {
                     'amount': {
@@ -395,9 +399,24 @@ class okcoinusd (Exchange):
         params = self.omit(params, 'cost')
         method += 'Trade'
         response = await getattr(self, method)(self.extend(order, params))
+        timestamp = self.milliseconds()
         return {
             'info': response,
             'id': str(response['order_id']),
+            'timestamp': timestamp,
+            'datetime': self.iso8601(timestamp),
+            'lastTradeTimestamp': None,
+            'status': None,
+            'symbol': symbol,
+            'type': type,
+            'side': side,
+            'price': price,
+            'amount': amount,
+            'filled': None,
+            'remaining': None,
+            'cost': None,
+            'trades': None,
+            'fee': None,
         }
 
     async def cancel_order(self, id, symbol=None, params={}):
@@ -431,6 +450,17 @@ class okcoinusd (Exchange):
             return 'canceled'
         return status
 
+    def parse_order_side(self, side):
+        if side == 1:
+            return 'buy'  # open long position
+        if side == 2:
+            return 'sell'  # open short position
+        if side == 3:
+            return 'sell'  # liquidate long position
+        if side == 4:
+            return 'buy'  # liquidate short position
+        return side
+
     def parse_order(self, order, market=None):
         side = None
         type = None
@@ -438,9 +468,16 @@ class okcoinusd (Exchange):
             if (order['type'] == 'buy') or (order['type'] == 'sell'):
                 side = order['type']
                 type = 'limit'
-            else:
-                side = 'buy' if (order['type'] == 'buy_market') else 'sell'
+            elif order['type'] == 'buy_market':
+                side = 'buy'
                 type = 'market'
+            elif order['type'] == 'sell_market':
+                side = 'sell'
+                type = 'market'
+            else:
+                side = self.parse_order_side(order['type'])
+                if ('contract_name' in list(order.keys())) or ('lever_rate' in list(order.keys())):
+                    type = 'margin'
         status = self.parse_order_status(order['status'])
         symbol = None
         if not market:
@@ -456,13 +493,16 @@ class okcoinusd (Exchange):
         amount = order['amount']
         filled = order['deal_amount']
         remaining = amount - filled
-        average = order['avg_price']
+        average = self.safe_float(order, 'avg_price')
+        # https://github.com/ccxt/ccxt/issues/2452
+        average = self.safe_float(order, 'price_avg', average)
         cost = average * filled
         result = {
             'info': order,
             'id': str(order['order_id']),
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
+            'lastTradeTimestamp': None,
             'symbol': symbol,
             'type': type,
             'side': side,
@@ -539,6 +579,7 @@ class okcoinusd (Exchange):
                 method += 'OrdersInfo'
                 request = self.extend(request, {
                     'type': status,
+                    'order_id': params['order_id'],
                 })
             else:
                 method += 'OrderHistory'
@@ -554,16 +595,16 @@ class okcoinusd (Exchange):
 
     async def fetch_open_orders(self, symbol=None, since=None, limit=None, params={}):
         open = 0  # 0 for unfilled orders, 1 for filled orders
-        return await self.fetch_orders(symbol, None, None, self.extend({
+        return await self.fetch_orders(symbol, since, limit, self.extend({
             'status': open,
         }, params))
 
     async def fetch_closed_orders(self, symbol=None, since=None, limit=None, params={}):
         closed = 1  # 0 for unfilled orders, 1 for filled orders
-        orders = await self.fetch_orders(symbol, None, None, self.extend({
+        orders = await self.fetch_orders(symbol, since, limit, self.extend({
             'status': closed,
         }, params))
-        return self.filter_by(orders, 'status', 'closed')
+        return orders
 
     async def withdraw(self, code, amount, address, tag=None, params={}):
         self.check_address(address)
