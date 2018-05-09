@@ -92,6 +92,17 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $sql = "delete from messages";
             $this->db->query($sql);
         }
+
+        $sql = "select id from messages order by id desc limit 1";
+        $this->db->query($sql);
+        if($row = $this->db->fetch_assoc()){
+            $latestId = $row["id"];
+        }
+        if($latestId > 30000){
+            $sql = "truncate messages";
+            $this->db->query($sql);
+        }
+
         $message = $this->cleanOriginalSignal($res["message"]);
         $sql = "insert into messages(message, channel_id, signal_id) values ('".$message."','".$res["channel_id"]."','".$res["id"]."')";
         $this->db->query($sql);
