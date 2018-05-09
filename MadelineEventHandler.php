@@ -5,7 +5,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     private $USDAmount = 5;
 
-    private $VIPPaidSignal = 1268010485;
+    private $PaidSignal1 = 1268010485;
 
     private $myOwnID = 435474230;
 
@@ -42,18 +42,24 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         }
 
         $res = $this->jsonDecode($res);
+        if($res["channel_id"] == $this->PaidSignal1){
+            print_r($res);
+        }
+
 
         if($res["message"]!=""){
+            $this->openDB();
             $channelId = $res["channel_id"];
             $signalId = $res["id"];
 
-            if($channelId == $this->VIPPaidSignal || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
-                $this->openDB();
+            $this->storeOriginalMessage($res);
+
+            if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
                 if(!$this->isExistedSignal($channelId, $signalId)){
                     $this->processingMessage($res["message"], $channelId, $signalId);
                 }
-                $this->closeDB();
             }
+            $this->closeDB();
         }
     }
 
@@ -74,6 +80,21 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         $retVal["channel_id"] = $channelId;
 
         return $retVal;
+    }
+
+    public function storeOriginalMessage($res){
+        $sql = "select count(id) as count_id from messages";
+        $this->db->query($sql);
+        if($row = $this->db->fetch_assoc()){
+            $countMessages = $row["count_id"];
+        }
+        if($countMessages >=100){
+            $sql = "delete from messages";
+            $this->db->query($sql);
+        }
+        $message = $this->cleanOriginalSignal($res["message"]);
+        $sql = "insert into messages(message, channel_id, signal_id) values ('".$message."','".$res["channel_id"]."','".$res["id"]."')";
+        $this->db->query($sql);
     }
 
     public function processingMessage($message, $channelId, $signalId){
@@ -118,6 +139,14 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         return $arrResult;
     }
 
+    public function cleanOriginalSignal($message){
+        $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
+        $message = preg_replace( '/[^[:print:]]/', ' ',$message);
+        $message = preg_replace('/\s+/', ' ',$message);
+        $message = str_replace("'","",$message);
+        return $message;
+    }
+
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
@@ -125,6 +154,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
+            $message = str_replace("'","",$message);
 
             if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell:-")!==false && strpos(strtolower($message)," buy @")!==false){
                 $arrMessage = explode(" ",$message);
@@ -219,8 +249,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $emailSubject = "Binusian CryptoBot, Buy ".$coin;
                     $emailRecipient = "wayang@wayangcorp.com";
                     $emailSender = "omkucingjoget@wayangcorp.com";
-
-                    exit($emailMessage);
                     $headers = "From: $emailSender\r\n";
                     //mail($emailRecipient,$emailSubject,$emailMessage,$headers);
                 }
