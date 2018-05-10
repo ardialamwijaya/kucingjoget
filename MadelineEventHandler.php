@@ -42,10 +42,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         }
 
         $res = $this->jsonDecode($res);
-        if($res["channel_id"] == $this->PaidSignal1){
-            print_r($res);
-        }
-
 
         if($res["message"]!=""){
             $this->openDB();
@@ -95,6 +91,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
         $sql = "select id from messages order by id desc limit 1";
         $this->db->query($sql);
+        $latestId = 0;
         if($row = $this->db->fetch_assoc()){
             $latestId = $row["id"];
         }
@@ -161,13 +158,21 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->VIPPaidSignal || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
+        if($channelId == $this->PaidSignal1 || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
             $message = str_replace("'","",$message);
 
-            if(strpos(strtolower($message)," done")===false && strpos(strtolower($message)," sell:-")!==false && strpos(strtolower($message)," buy @")!==false){
+            if(strpos(strtolower($message)," done")===false &&
+                strpos(strtolower($message)," achieve")===false &&
+                strpos(strtolower($message)," complete")===false &&
+                strpos(strtolower($message)," finish")===false  &&
+                strpos(strtolower($message)," buy")!==false &&
+                strpos(strtolower($message)," sell")===false &&
+                strpos(strtolower($message)," #")!==false
+
+            ){
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
