@@ -169,7 +169,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 strpos(strtolower($message)," complete")===false &&
                 strpos(strtolower($message)," finish")===false  &&
                 strpos(strtolower($message)," buy")!==false &&
-                strpos(strtolower($message)," sell")===false &&
+                strpos(strtolower($message)," sell")!==false &&
                 strpos(strtolower($message)," #")!==false
 
             ){
