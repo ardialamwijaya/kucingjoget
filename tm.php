@@ -1,5 +1,8 @@
 <?php
-
+if (!file_exists('madeline.php')) {
+    copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
+}
+include 'madeline.php';
 require_once 'vendor/autoload.php';
 include 'dblib.inc.php';
 include 'myBinance.php';
