@@ -100,6 +100,7 @@ class ExchangeService
 
 
     public function market_buy($coin, $amount){
+        echo $amount;exit;
         return $this->exchange->create_order($coin, "market","buy", $amount);
     }
 
