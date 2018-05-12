@@ -121,7 +121,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
                             'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
-                        //$this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
+                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
             }
         }
@@ -250,9 +250,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $ticker = $exchange->getCurrentPriceInfo($coin);
             $buyPrice = $ticker["ask"];
             if($buySignal <=($buySignal * 1.02) ){
-                echo "#################asdf#####";
                 if($exchange->countLimitSell() < 20){
-                    echo "#################2222222222222222222#####";
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
                     $limitSellInfo["id"] = 0;
