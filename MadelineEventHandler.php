@@ -163,6 +163,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
             $message = str_replace("'","",$message);
+            $message = str_replace(","," ",$message);
+            $message = str_replace("-"," ",$message);
+            $message = preg_replace('/\s+/', ' ',$message);
 
             if(strpos(strtolower($message),"done")===false &&
                 strpos(strtolower($message),"achieve")===false &&
