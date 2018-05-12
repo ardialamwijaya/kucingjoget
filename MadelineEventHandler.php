@@ -254,11 +254,11 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
                     $limitSellInfo["id"] = 0;
-                    $marketBuyInfo = $exchange->market_buy($coin, $buyAmount);
+                    $marketBuyInfo = $exchange->market_buy($coin, number_format($buyAmount, 8));
                     $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
-                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], $price);
-                    $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,$price,$buyAmount, "BINANCE");
+                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], number_format($price, 8));
+                    $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,number_format($price, 8),$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
                     $emailMessage .= "Allocated Budget: $".$this->getUSDAmount()."\r\n";
