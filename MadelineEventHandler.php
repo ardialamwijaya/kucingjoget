@@ -164,13 +164,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $message = preg_replace('/\s+/', ' ',$message);
             $message = str_replace("'","",$message);
 
-            if(strpos(strtolower($message)," done")===false &&
-                strpos(strtolower($message)," achieve")===false &&
-                strpos(strtolower($message)," complete")===false &&
-                strpos(strtolower($message)," finish")===false  &&
-                strpos(strtolower($message)," buy")!==false &&
-                strpos(strtolower($message)," sell")!==false &&
-                strpos(strtolower($message)," #")!==false
+            if(strpos(strtolower($message),"done")===false &&
+                strpos(strtolower($message),"achieve")===false &&
+                strpos(strtolower($message),"complete")===false &&
+                strpos(strtolower($message),"finish")===false  &&
+                strpos(strtolower($message),"buy")!==false &&
+                strpos(strtolower($message),"sell")!==false &&
+                strpos(strtolower($message),"#")!==false
 
             ){
                 $arrMessage = explode(" ",$message);
