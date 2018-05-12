@@ -250,7 +250,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $ticker = $exchange->getCurrentPriceInfo($coin);
             $buyPrice = $ticker["ask"];
             if($buySignal <=($buySignal * 1.02) ){
+                echo "#################asdf#####";
                 if($exchange->countLimitSell() < 20){
+                    echo "#################2222222222222222222#####";
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
                     $limitSellInfo["id"] = 0;
@@ -272,6 +274,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     //mail($emailRecipient,$emailSubject,$emailMessage,$headers);
                 }
             }
+            exit;
         }
     }
 
