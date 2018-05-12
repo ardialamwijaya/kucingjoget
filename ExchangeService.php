@@ -207,7 +207,7 @@ class ExchangeService
     public function getBaseCoinAmountFromUSD($baseCoin = "BTC", $usdAmount){
         $baseCoinTicker = $this->getTicker($baseCoin."/USDT");
         $currentBaseCoinPrice = $baseCoinTicker["ask"];
-        $coinAmount = $usdAmount * $currentBaseCoinPrice;
+        echo $currentBaseCoinPrice;exit;
         $coinAmount = round($coinAmount, 5, PHP_ROUND_HALF_DOWN);
         return $coinAmount;
 
