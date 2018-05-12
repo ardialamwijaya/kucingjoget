@@ -207,9 +207,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
                 $this->insertSignal($signalId, $channelId, $arrResult);
-
-
-                var_dump($arrResult);exit;
             }
 
 
