@@ -52,6 +52,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
             if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
                 if(!$this->isExistedSignal($channelId, $signalId)){
+                    echo "$$$$$$$$$$$$$$$$$$adf$$$$$$$$$$$$$$$$$$$";exit;
                     $this->processingMessage($res["message"], $channelId, $signalId);
                 }
             }
