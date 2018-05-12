@@ -121,7 +121,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
                             'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
-                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
+                        //$this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
             }
         }
