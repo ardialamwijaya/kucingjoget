@@ -100,7 +100,6 @@ class ExchangeService
 
 
     public function market_buy($coin, $amount){
-        echo $amount;exit;
         return $this->exchange->create_order($coin, "market","buy", $amount);
     }
 
@@ -208,7 +207,7 @@ class ExchangeService
     public function getBaseCoinAmountFromUSD($baseCoin = "BTC", $usdAmount){
         $baseCoinTicker = $this->getTicker($baseCoin."/USDT");
         $currentBaseCoinPrice = $baseCoinTicker["ask"];
-        $coinAmount = $usdAmount / $currentBaseCoinPrice;
+        $coinAmount = $usdAmount * $currentBaseCoinPrice;
         $coinAmount = round($coinAmount, 5, PHP_ROUND_HALF_DOWN);
         return $coinAmount;
 
