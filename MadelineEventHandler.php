@@ -52,7 +52,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
             if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
                 if(!$this->isExistedSignal($channelId, $signalId)){
-                    echo "$$$$$$$$$$$$$$$$$$adf$$$$$$$$$$$$$$$$$$$";exit;
                     $this->processingMessage($res["message"], $channelId, $signalId);
                 }
             }
@@ -107,8 +106,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     }
 
     public function processingMessage($message, $channelId, $signalId){
-        $startTrx = 0;
+        $startTrx = 1;
         $arrResult  = $this->processingSignals($message, $channelId, $signalId);
+        var_dump($arrResult);exit;
         if($arrResult && isset($arrResult["exchange"]) && isset($arrResult["coin"])){
             if($startTrx==0 && $channelId==$this->myOwnID){
                 //DEBUG PURPOSE ONLY
