@@ -3,7 +3,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
 
-    private $USDAmount = 2;
+    private $UsdAmount = 2;
 
     private $PaidSignal1 = 1268010485;
 
@@ -241,9 +241,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         if($availableCoin){
             $coin = $availableCoin;
             if(strpos(strtolower($availableCoin),"/btc")!==false){
-                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->getUSDAmount());
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->UsdAmount);
             }else{
-                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->getUSDAmount());
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->UsdAmount);
             }
 
             //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
@@ -285,22 +285,4 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     {
         $this->db = $db;
     }
-
-    /**
-     * @return int
-     */
-    public function getUSDAmount()
-    {
-        return $this->USDAmount;
-    }
-
-    /**
-     * @param int $USDAmount
-     */
-    public function setUSDAmount($USDAmount)
-    {
-        $this->USDAmount = $USDAmount;
-    }
-
-
 }
