@@ -208,7 +208,7 @@ class ExchangeService
         $baseCoinTicker = $this->getTicker($baseCoin."/USDT");
         $currentBaseCoinPrice = $baseCoinTicker["ask"];
         $coinAmount = $usdAmount / $currentBaseCoinPrice;
-        echo $coinAmount;exit;
+        echo $usdAmount."==".$currentBaseCoinPrice."==".$coinAmount;exit;
         $coinAmount = round($coinAmount, 5, PHP_ROUND_HALF_DOWN);
         return $coinAmount;
 
