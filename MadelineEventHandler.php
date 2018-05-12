@@ -3,7 +3,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
 
-    private $USDAmount = 5;
+    private $USDAmount = 2;
 
     private $PaidSignal1 = 1268010485;
 
