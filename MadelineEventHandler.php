@@ -108,7 +108,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function processingMessage($message, $channelId, $signalId){
         $startTrx = 1;
         $arrResult  = $this->processingSignals($message, $channelId, $signalId);
-        var_dump($arrResult);exit;
         if($arrResult && isset($arrResult["exchange"]) && isset($arrResult["coin"])){
             if($startTrx==0 && $channelId==$this->myOwnID){
                 //DEBUG PURPOSE ONLY
@@ -205,6 +204,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
                 $this->insertSignal($signalId, $channelId, $arrResult);
+
+
+                var_dump($arrResult);exit;
             }
 
 
