@@ -3,7 +3,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 {
     private $db;
 
-    private $UsdAmount = 2;
+    private $usdAmount = 12;
 
     private $PaidSignal1 = 1268010485;
 
@@ -121,7 +121,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
                             'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
-                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
+                        //$this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
             }
         }
@@ -241,9 +241,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         if($availableCoin){
             $coin = $availableCoin;
             if(strpos(strtolower($availableCoin),"/btc")!==false){
-                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->UsdAmount);
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->usdAmount);
             }else{
-                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->UsdAmount);
+                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->usdAmount);
             }
 
             //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
@@ -261,7 +261,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,number_format($price, 8),$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
-                    $emailMessage .= "Allocated Budget: $".$this->getUSDAmount()."\r\n";
+                    $emailMessage .= "Allocated Budget: $".$this->usdAmount."\r\n";
                     $emailMessage .= "Buy Price: ".$buyPrice."\r\n";
                     $emailMessage .= "Buy Amount: ".$buyAmount."\r\n";
                     $emailMessage .= "Sell Price: ".$price."\r\n";
