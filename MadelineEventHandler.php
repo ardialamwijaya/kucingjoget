@@ -223,7 +223,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function isExistedSignal($signalId, $channelId){
         $sql = "select * from signals where signal_id=$signalId and channel_id=$channelId";
-        echo $sql;exit;
         $this->db->query($sql);
         if($row = $this->db->fetch_assoc()){
             return true;
