@@ -11,6 +11,8 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     private $dudungpretID = 1331154859;
 
+    private $cryptoHeight = 1138551377;
+
     public function __construct($MadelineProto)
     {
         parent::__construct($MadelineProto);
@@ -50,7 +52,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
             $this->storeOriginalMessage($res);
 
-            if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
+            if($channelId == $this->PaidSignal1 || $channelId == $this->cryptoHeight || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
                 if(!$this->isExistedSignal($signalId,$channelId )){
                     $this->processingMessage($res["message"], $channelId, $signalId);
                 }
@@ -158,7 +160,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->PaidSignal1 || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
+        if($channelId == $this->PaidSignal1){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
@@ -176,6 +178,64 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 strpos(strtolower($message),"#")!==false
 
             ){
+                $arrMessage = explode(" ",$message);
+                $i = 0;
+                $firstBuy = 0;
+                $firstTarget = 0;
+                $buy_index = 0;
+                $sell_index = 0;
+
+                foreach($arrMessage as $message){
+                    $i++;
+                    if(strpos($message,"#")!==false) {
+                        $arrResult["coin"] = $message;
+                    }
+                    if(strtolower($message)=="buy" || strpos($message,"#")!==false){
+                        $buy_index = $i;
+                    }
+                    if(strpos(strtolower($message),"sell")!==false){
+                        $sell_index = $i;
+                    }
+                    if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
+                        $arrResult["firstBuy"] = $message;
+                        $firstBuy = 1;
+                    }
+                    if($buy_index >0 && $sell_index > 0 && intval($message) > 0  && $firstTarget == 0){
+                        $arrResult["firstTarget"] = str_replace(",","",$message);
+                        $firstTarget = 1;
+                    }
+                }
+
+                $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
+                $arrResult["exchange"] = "BINANCE";
+                $this->insertSignal($signalId, $channelId, $arrResult);
+            }
+
+
+        }
+
+        if($channelId == $this->cryptoHeight || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
+            $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
+            $message = preg_replace( '/[^[:print:]]/', ' ',$message);
+            $message = preg_replace('/\s+/', ' ',$message);
+            $message = str_replace("'","",$message);
+            $message = str_replace(","," ",$message);
+            $message = str_replace("-"," ",$message);
+            $message = preg_replace('/\s+/', ' ',$message);
+
+            if(strpos(strtolower($message),"done")===false &&
+                strpos(strtolower($message),"achieve")===false &&
+                strpos(strtolower($message),"complete")===false &&
+                strpos(strtolower($message),"finish")===false  &&
+                strpos(strtolower($message),"buyingpoint")!==false &&
+                strpos(strtolower($message),"sellingpoint")!==false &&
+                strpos(strtolower($message),"binance")!==false &&
+                strpos(strtolower($message),"shorttrade")!==false &&
+                strpos(strtolower($message),"stoploss")!==false &&
+                strpos(strtolower($message),"#")!==false
+
+            ){
+                echo $message;exit;
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -242,8 +302,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $coin = $availableCoin;
             if(strpos(strtolower($availableCoin),"/btc")!==false){
                 $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->usdAmount);
-            }else{
-                $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->usdAmount);
+            }elseif(strpos(strtolower($availableCoin),"/bnb")!==false){
+                //$baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->usdAmount);
+                $baseCoinAmount = 1;
             }
 
             //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
