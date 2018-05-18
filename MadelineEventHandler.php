@@ -235,8 +235,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 strpos(strtolower($message),"#")!==false
 
             ){
-                echo $message;exit;
-
                 //#ShortTrade #BAT #Binance #Bittrex #BuyingPoint: 0.000046 0.000047 ##SellingPoint: 0.00004950 0.000054 #Stoploss: 0.000045
 
                 $arrMessage = explode(" ",$message);
