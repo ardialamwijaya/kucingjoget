@@ -236,6 +236,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
             ){
                 echo $message;exit;
+
+                //#ShortTrade #BAT #Binance #Bittrex #BuyingPoint: 0.000046 0.000047 ##SellingPoint: 0.00004950 0.000054 #Stoploss: 0.000045
+
                 $arrMessage = explode(" ",$message);
                 $i = 0;
                 $firstBuy = 0;
@@ -245,13 +248,13 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
                 foreach($arrMessage as $message){
                     $i++;
-                    if(strpos($message,"#")!==false) {
+                    if(strlen($message)<=5 && strtolower($message)!= "yobit") {
                         $arrResult["coin"] = $message;
                     }
-                    if(strtolower($message)=="buy" || strpos($message,"#")!==false){
+                    if(strpos(strtolower($message),"buying")!==false){
                         $buy_index = $i;
                     }
-                    if(strpos(strtolower($message),"sell")!==false){
+                    if(strpos(strtolower($message),"selling")!==false){
                         $sell_index = $i;
                     }
                     if($buy_index >0 && $sell_index == 0 && intval($message) > 0 && $firstBuy == 0){
