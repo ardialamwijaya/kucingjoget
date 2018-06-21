@@ -52,7 +52,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
             $this->storeOriginalMessage($res);
 
-            if($channelId == $this->PaidSignal1 || $channelId == $this->cryptoHeight || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
+            if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID || $channelId == $this->myOwnID){
                 if(!$this->isExistedSignal($signalId,$channelId )){
                     $this->processingMessage($res["message"], $channelId, $signalId);
                 }
@@ -123,7 +123,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
                             'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
-                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
+                        //$this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
                 }
             }
         }
