@@ -168,6 +168,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             $message = str_replace(","," ",$message);
             $message = str_replace("-"," ",$message);
             $message = preg_replace('/\s+/', ' ',$message);
+            $message = str_replace("#BINANCE","", $message);
+            $message = str_replace("#binance","", $message);
+            $message = str_replace("#Binance","", $message);
 
             if(strpos(strtolower($message),"done")===false &&
                 strpos(strtolower($message),"achieve")===false &&
@@ -267,7 +270,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
                 $arrResult["coin"] = str_replace("#","",$arrResult["coin"]);
                 $arrResult["exchange"] = "BINANCE";
-                $this->insertSignal($signalId, $channelId, $arrResult);
+                $arrResult["dbSignalId"] = $this->insertSignal($signalId, $channelId, $arrResult);
             }
 
 
@@ -311,7 +314,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
             //file_put_contents("tmDEBUG.signal",json_encode($exchange->fetch_markets())."\r\n",FILE_APPEND);exit;
             $ticker = $exchange->getCurrentPriceInfo($coin);
             $buyPrice = $ticker["ask"];
-            if($buySignal <=($buySignal * 1.02) ){
+            if($buyPrice <=($buySignal * 1.02) ){
                 if($exchange->countLimitSell() < 20){
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
@@ -319,7 +322,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $marketBuyInfo = $exchange->market_buy($coin, number_format($buyAmount, 8));
                     $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
-                    $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], number_format($price, 8));
+                    //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], number_format($price, 8));
                     $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,number_format($price, 8),$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
@@ -333,6 +336,11 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $headers = "From: $emailSender\r\n";
                     //mail($emailRecipient,$emailSubject,$emailMessage,$headers);
                 }
+            }else{
+                //at this time, current price is still higher than the buy signal price, so must change the signal status into pending
+                $dbSignalId = $arrResult["dbSignalId"];
+                $updateSignalStatusSql = "update signals set is_processed = 0 where id= $dbSignalId";
+                $this->db->query($updateSignalStatusSql);
             }
             exit;
         }
