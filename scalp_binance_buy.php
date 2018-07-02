@@ -12,6 +12,7 @@ $arrSettings = array(
 );
 $exchange = new ExchangeService($arrSettings);
 $exchangeSignal = "binance";
+$usdAmount = 10;
 
 $getPendingSignalSql = "select * from signals where is_processed = 0";
 $db->query($getPendingSignalSql);
@@ -27,10 +28,7 @@ while($row = $db->fetch_assoc()){
         $coin = $availableCoin;
         $baseCoinAmount = 1;
         if(strpos(strtolower($availableCoin),"/btc")!==false){
-            $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$this->usdAmount);
-        }elseif(strpos(strtolower($availableCoin),"/bnb")!==false){
-            //$baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BNB",$this->usdAmount);
-            $baseCoinAmount = 1;
+            $baseCoinAmount = $exchange->getBaseCoinAmountFromUSD("BTC",$usdAmount);
         }
         if($buyPrice <=($buySignal * 1.02) ) {
             $exchange->updateProcessedSignalStatus($id,1);

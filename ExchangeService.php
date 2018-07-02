@@ -194,12 +194,16 @@ class ExchangeService
     }
 
     public function checkBinanceMarket($coin, $exchange){
-        $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin/bnb%'  and e.name like '$exchange'";
+        $coin = strtolower($coin);
+        if(strpos($coin,"/btc")===false){
+            $coin = $coin."/btc";
+        }
+        $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin'  and e.name like '$exchange'";
         $this->db->query($checkSql);
         if($row = $this->db->fetch_assoc()){
             return $row["symbol"];
         }else{
-            $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin/btc%'  and e.name like '$exchange'";
+            $checkSql = "select symbol from markets m inner join exchanges e on m.exchange_id = e.id where m.symbol like '$coin'  and e.name like '$exchange'";
             $this->db->query($checkSql);
             if($row = $this->db->fetch_assoc()){
                 return $row["symbol"];
