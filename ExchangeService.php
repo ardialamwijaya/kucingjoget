@@ -122,6 +122,11 @@ class ExchangeService
         return $count;
     }
 
+    public function updateProcessedSignalStatus ($id, $processed){
+        $updateProcessedSignalStatusSql = "update signals set is_processed=$processed where id = $id";
+        $this->db->query($updateProcessedSignalStatusSql);
+    }
+
     public function insertBuytoDB($signalId,$buyOrderId, $coin,$userId, $price, $amount, $exchange){
         $insertBuyToDBSql = "insert into buy_trx(signal_id,order_id,coin, user_id, buy_price, user_allocated_balance,settled_date, exchange) values ($signalId,$buyOrderId,'$coin',$userId, $price, $amount, now(),'$exchange')";
         $this->db->query($insertBuyToDBSql);
