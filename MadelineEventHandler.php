@@ -109,6 +109,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
     public function processingMessage($message, $channelId, $signalId){
         $startTrx = 1;
+        $isSimulate = 1;
         $arrResult  = $this->processingSignals($message, $channelId, $signalId);
         if($arrResult && isset($arrResult["exchange"]) && isset($arrResult["coin"])){
             if($startTrx==0 && $channelId==$this->myOwnID){
@@ -123,7 +124,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                             'apiKey' => 'ZDaaBMAEmN2gDitsDcYESXA99QY9OZCeG2qvpyGyflC0BGb5MnqjqhG4MoPumUlN',
                             'secret' => 's30A0gl8wPOer6R5P8bOchU9Aqyt10rY09GMyUjq7SCyIjcUGFawNxt3wWKzdM07'
                         );
-                        //$this->makeBinanceTrx($arrResult,$arrSettings, $signalId);
+                        $this->makeBinanceTrx($arrResult,$arrSettings, $signalId, $isSimulate);
                 }
             }
         }
@@ -294,7 +295,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
         return false;
     }
 
-    public function makeBinanceTrx($arrResult, $arrSettings, $signalId){
+    public function makeBinanceTrx($arrResult, $arrSettings, $signalId, $isSimulate){
         $coin = $arrResult["coin"];
         $buySignal = $arrResult["firstBuy"];
         $exchangeSignal = $arrResult["exchange"];
@@ -319,10 +320,14 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $buyAmount = floor($baseCoinAmount / $buyPrice);
                     $marketBuyInfo["id"] = 0;
                     $limitSellInfo["id"] = 0;
-                    $marketBuyInfo = $exchange->market_buy($coin, number_format($buyAmount, 8));
+                    if(!$isSimulate){
+                        $marketBuyInfo = $exchange->market_buy($coin, number_format($buyAmount, 8));
+                    }
                     $exchange->insertBuytoDB($signalId, $marketBuyInfo["id"],$coin,1,$buyPrice,$baseCoinAmount, "BINANCE");
                     $price = $buyPrice * 1.05;
-                    //$limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], number_format($price, 8));
+                    if(!$isSimulate){
+                        $limitSellInfo = $exchange->limit_sell($coin,$marketBuyInfo["amount"], number_format($price, 8));
+                    }
                     $exchange->insertPendingSelltoDB($signalId,$limitSellInfo["id"],$marketBuyInfo["id"],$coin,1,number_format($price, 8),$buyAmount, "BINANCE");
 
                     $emailMessage = "Coin: ".$coin."\r\n";
@@ -342,7 +347,6 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 $updateSignalStatusSql = "update signals set is_processed = 0 where id= $dbSignalId";
                 $this->db->query($updateSignalStatusSql);
             }
-            exit;
         }
     }
 

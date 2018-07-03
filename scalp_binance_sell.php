@@ -20,7 +20,7 @@ while($row = $db->fetch_assoc()){
     $coin = $row["coin"];
     $ticker = $exchange->getTicker($coin);
     $currentPrice = $ticker["ask"];
-    if($currentPrice >=($buyPrice * 1.02) ) {
+    if($currentPrice >=($buyPrice * 1.03) ) {
         $closePendingSellTrxSql = "update pending_sell_trx set is_pending = 0, target_price = $buyPrice";
     }
     $sleep = rand(5,15);
