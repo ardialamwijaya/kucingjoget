@@ -192,7 +192,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                 foreach($arrMessage as $message){
                     $i++;
                     if(strpos($message,"#")!==false) {
-                        $arrResult["coin"] = $message;
+                        $arrResult["coin"] = strtoupper($message);
                     }
                     if(strtolower($message)=="buy" || strpos($message,"#")!==false){
                         $buy_index = $i;
