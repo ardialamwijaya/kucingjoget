@@ -161,7 +161,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function cleansingSignals($message, $channelId, $signalId){
         $arrResult = array();
 
-        if($channelId == $this->PaidSignal1){
+        if($channelId == $this->PaidSignal1 || $channelId == $this->dudungpretID){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
@@ -193,6 +193,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
                     $i++;
                     if(strpos($message,"#")!==false) {
                         $arrResult["coin"] = strtoupper($message);
+                        $arrResult["coin"] = preg_replace("/[^a-zA-Z]+/", "", $arrResult["coin"]);
                     }
                     if(strtolower($message)=="buy" || strpos($message,"#")!==false){
                         $buy_index = $i;
@@ -218,7 +219,7 @@ class EventHandler extends \danog\MadelineProto\EventHandler
 
         }
 
-        if($channelId == $this->cryptoHeight || $channelId == $this->myOwnID || $channelId == $this->dudungpretID){
+        if($channelId == $this->cryptoHeight){
             $message = preg_replace('/[\x00-\x1F\x7F-\xFF]/', ' ', $message);
             $message = preg_replace( '/[^[:print:]]/', ' ',$message);
             $message = preg_replace('/\s+/', ' ',$message);
