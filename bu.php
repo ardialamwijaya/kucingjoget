@@ -30,7 +30,7 @@ if(isset($_POST["receh"]) && isset($_POST["nilai"])){
     $db->init();
 
     $yesterdayDate = date('Y-m-d',strtotime("-1 days"));
-    $checkIsDuplicateProcessedSignal = "select signal_id from signals where channel_id=1268010485 and received_date >='$yesterdayDate' and receh like '%$receh%' order by signal_id desc limit 0,1";
+    $checkIsDuplicateProcessedSignal = "select signal_id from signals where channel_id=1268010485 and received_date >='$yesterdayDate' and coin like '%$receh%' order by signal_id desc limit 0,1";
     $db->query($checkIsDuplicateProcessedSignal);
     $duplicatedId = "";
     if($row = $db->fetch_assoc()){
