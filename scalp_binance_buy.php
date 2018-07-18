@@ -20,11 +20,12 @@ while($row = $db->fetch_assoc()){
     $id = $row["id"];
     $signalId = $row["signal_id"];
     $buySignal = $row["signal_buy_value"];
-    $coin = $row["coin"];
+    $coin = strtoupper($row["coin"]);
+    if(strpos($coin,"/BTC")===false) $coin .= "/BTC";
     $availableCoin = $exchange->checkMarket($coin,$exchangeSignal);
-    $ticker = $exchange->getTicker($coin);
-    $buyPrice = $ticker["ask"];
     if($availableCoin){
+        $ticker = $exchange->getTicker($coin);
+        $buyPrice = $ticker["ask"];
         $coin = $availableCoin;
         $baseCoinAmount = 1;
         if(strpos(strtolower($availableCoin),"/btc")!==false){
