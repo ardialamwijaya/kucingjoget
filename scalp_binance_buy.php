@@ -14,6 +14,10 @@ $exchange = new ExchangeService($arrSettings);
 $exchangeSignal = "binance";
 $usdAmount = 10;
 
+$lastWeekDate = date('Y-m-d',strtotime("-7 days"));
+$closeWeekAgoSignalSql = "update signals set is_processed=-1, reason='signal invalid, too long to wait for buy (7days ago)' where received_date >'$lastWeekDate' and is_processed=0";
+$db->query($closeWeekAgoSignalSql);
+
 $getPendingSignalSql = "select * from signals where is_processed = 0";
 $db->query($getPendingSignalSql);
 while($row = $db->fetch_assoc()){

@@ -44,8 +44,8 @@ if(isset($_POST["receh"]) && isset($_POST["nilai"])){
         if($row = $db->fetch_assoc()){
             $lastSignalId = $row["signal_id"];
         }
-        $buyPendingSignalSql = "insert into signals(signal_id, channel_id, exchange, coin, received_date, signal_buy_value, signal_sell_value, is_processed, is_rejected ) values 
-('".($lastSignalId+1)."', '1268010485', 'BINANCE', '".strtoupper($receh)."', NOW(), '".$nilai."', '".($nilai*1.1)."', 0, 0  )";
+        $buyPendingSignalSql = "insert into signals(signal_id, channel_id, exchange, coin, received_date, signal_buy_value, signal_sell_value, is_processed ) values 
+('".($lastSignalId+1)."', '1268010485', 'BINANCE', '".strtoupper($receh)."', NOW(), '".$nilai."', '".($nilai*1.1)."', 0 )";
         $db->query($buyPendingSignalSql);
 
         echo $receh." processed";

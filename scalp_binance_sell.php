@@ -23,6 +23,18 @@ while($row = $db->fetch_assoc()){
     if($currentPrice >=($buyPrice * 1.03) ) {
         $closePendingSellTrxSql = "update pending_sell_trx set is_pending = 0, target_price = $buyPrice";
     }
+    $signalId = $row["signal_id"];
+    $sellLimitOrderId = 0;
+    $coin = $row["coin"];
+    $targetPrice = $row["target_price"];
+    $settledDate = $row["settled_date"];
+    $userId = $row["user_id"];
+    $buyMarketOrderId = $row["buy_market_order_id"];
+    $buyPrice = $row["buy_price"];
+    $userAllocatedBalance = 0;
+    $userFee = 0;
+    $userNetProfit = 0;
+    $exchange->insertSelltoDB($signalId, $sellLimitOrderId, 'binance', $coin, $targetPrice, $settledDate, $userId, $userAllocatedBalance, $userFee, $userNetProfit);
     $sleep = rand(5,15);
     sleep($sleep);
 }

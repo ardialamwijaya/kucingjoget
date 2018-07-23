@@ -137,6 +137,11 @@ class ExchangeService
         $this->db->query($insertBuyToDBSql);
     }
 
+    public function insertSelltoDB($signalId, $sellLimitOrderId, $exchange,$coin, $targetPrice, $settledDate, $userId, $userAllocatedBalance, $userFee, $userNetProfit){
+        $insertSellToDBSql = "insert into sell_trx(signal_id,order_id,exchange,coin,sold_price,settled_date,user_id, user_allocated_balance, fee, user_nett_profit) values ($signalId,$sellLimitOrderId, '$exchange','$coin', $targetPrice, '$settledDate', $userId, $userAllocatedBalance, $userFee, $userNetProfit)";
+        $this->db->query($insertSellToDBSql);
+    }
+
     public function fetch_orders($symbol = null, $since = null, $limit = null){
         return $this->exchange->fetch_open_orders($symbol, $since, $limit);
     }
